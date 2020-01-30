@@ -6,6 +6,19 @@ app.use(express.json())
 
 const projects = []
 
+// Middleware
+function projectExists(req, res, next) {
+  const { id } = req.params
+
+  const project = projects.find(p => p.id == id)
+
+  if (!project) {
+    return res.json({ message: 'Project not exists' })
+  } else {
+    return next()
+  }
+}
+
 // Rota que lista todos os projetos e suas tarefas
 app.get('/projects', (req, res) => {
   return res.json(projects)
@@ -26,7 +39,7 @@ app.post('/projects', (req, res) => {
 
 })
 
-app.put('/projects/:id', (req, res) => {
+app.put('/projects/:id', projectExists, (req, res) => {
   const { id } = req.params
   const { title } = req.body
 
@@ -35,7 +48,7 @@ app.put('/projects/:id', (req, res) => {
   return res.json(project)
 })
 
-app.delete('/projects/:id', (req, res) => {
+app.delete('/projects/:id', projectExists, (req, res) => {
   const { id } = req.params
 
   const project = projects.find(p => p.id == id)
@@ -49,16 +62,13 @@ app.delete('/projects/:id', (req, res) => {
   }
 })
 
-app.post('/projects/:id/tasks', (req, res) => {
-  const { id, title} = req.body
+app.post('/projects/:id/tasks', projectExists, (req, res) => {
+  const { id } = req.params
+  const { title } = req.body
 
-  const project = {
-    id,
-    title,
-    task: []
-  }
+  const project = projects.find(p => p.id == id)
 
-  projects.push(project)
+  project.task.push({ title })
 
   return res.status(201).json(project)
 
